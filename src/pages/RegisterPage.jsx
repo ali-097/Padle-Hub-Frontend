@@ -174,7 +174,13 @@ const RegisterPage = () => {
     const result = await register(registrationData);
 
     if (result.success) {
-      navigate("/courts");
+      const userData = JSON.parse(localStorage.getItem("user"));
+
+      if (userData?.role === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/courts");
+      }
     } else {
       let errorMessage = result.error;
 

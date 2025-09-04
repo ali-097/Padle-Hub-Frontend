@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { authAPI } from "../utils/api";
+import { authAPI, getUserFromToken } from "../utils/api";
 
 const AuthContext = createContext();
 
@@ -17,10 +17,17 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    const userData = localStorage.getItem("user");
 
-    if (token && userData) {
-      setUser(JSON.parse(userData));
+    if (token) {
+      const tokenData = getUserFromToken(token);
+      if (tokenData) {
+        const userData = {
+          id: tokenData.id,
+          role: tokenData.role,
+          email: localStorage.getItem("userEmail") || "user@example.com",
+        };
+        setUser(userData);
+      }
     }
     setLoading(false);
   }, []);
@@ -31,8 +38,12 @@ export const AuthProvider = ({ children }) => {
       const { token } = response.data;
 
       localStorage.setItem("token", token);
+      localStorage.setItem("userEmail", credentials.email);
 
+      const tokenData = getUserFromToken(token);
       const userData = {
+        id: tokenData.id,
+        role: tokenData.role,
         email: credentials.email,
       };
 
@@ -69,6 +80,7 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    localStorage.removeItem("userEmail");
     setUser(null);
   };
 
@@ -79,6 +91,8 @@ export const AuthProvider = ({ children }) => {
     logout,
     loading,
     isAuthenticated: !!user,
+    isAdmin: user?.role === "admin",
+    isUser: user?.role === "user",
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
