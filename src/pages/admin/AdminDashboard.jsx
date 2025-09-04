@@ -11,10 +11,11 @@ const AdminDashboard = () => {
   const [formData, setFormData] = useState({
     name: "",
     status: "available",
-    image: "",
     openingHour: "08:00",
     closingHour: "22:00",
   });
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewImage, setPreviewImage] = useState("");
 
   const { user } = useAuth();
 
@@ -40,27 +41,43 @@ const AdminDashboard = () => {
     setError("");
 
     try {
+      const submitData = new FormData();
+      submitData.append("name", formData.name);
+      submitData.append("status", formData.status);
+      submitData.append("openingHour", formData.openingHour);
+      submitData.append("closingHour", formData.closingHour);
+
+      if (selectedFile) {
+        submitData.append("image", selectedFile);
+      }
+
       if (editingCourt) {
-        await courtAPI.updateCourt(editingCourt._id, formData);
+        const response = await courtAPI.updateCourt(
+          editingCourt._id,
+          submitData
+        );
+        console.log("Update response:", response.data);
       } else {
-        await courtAPI.createCourt(formData);
+        const response = await courtAPI.createCourt(submitData);
+        console.log("Create response:", response.data);
       }
 
       await fetchCourts();
       setShowForm(false);
       setEditingCourt(null);
+      setSelectedFile(null);
+      setPreviewImage("");
       setFormData({
         name: "",
         status: "available",
-        image: "",
         openingHour: "08:00",
         closingHour: "22:00",
       });
     } catch (err) {
+      console.error("Error saving court:", err);
       setError(
         editingCourt ? "Failed to update court" : "Failed to create court"
       );
-      console.error("Error saving court:", err);
     } finally {
       setLoading(false);
     }
@@ -71,10 +88,11 @@ const AdminDashboard = () => {
     setFormData({
       name: court.name,
       status: court.status,
-      image: court.image || "",
       openingHour: court.openingHour,
       closingHour: court.closingHour,
     });
+    setPreviewImage(court.image || "");
+    setSelectedFile(null);
     setShowForm(true);
   };
 
@@ -97,13 +115,31 @@ const AdminDashboard = () => {
     });
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setPreviewImage(e.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const clearImage = () => {
+    setSelectedFile(null);
+    setPreviewImage("");
+  };
+
   const resetForm = () => {
     setShowForm(false);
     setEditingCourt(null);
+    setSelectedFile(null);
+    setPreviewImage("");
     setFormData({
       name: "",
       status: "available",
-      image: "",
       openingHour: "08:00",
       closingHour: "22:00",
     });
@@ -312,16 +348,70 @@ const AdminDashboard = () => {
 
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Image URL
+                      Court Image
                     </label>
-                    <input
-                      type="url"
-                      name="image"
-                      value={formData.image}
-                      onChange={handleChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Enter image URL"
-                    />
+
+                    <div className="mb-4">
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleFileChange}
+                          className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                        />
+                        {(selectedFile || previewImage) && (
+                          <button
+                            type="button"
+                            onClick={clearImage}
+                            className="px-3 py-2 text-sm text-red-600 hover:text-red-800"
+                          >
+                            Clear
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {previewImage && (
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Preview
+                        </label>
+                        <div className="relative w-full h-48 border-2 border-gray-300 border-dashed rounded-lg overflow-hidden">
+                          <img
+                            src={previewImage}
+                            alt="Preview"
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.target.style.display = "none";
+                              e.target.nextSibling.style.display = "flex";
+                            }}
+                          />
+                          <div
+                            className="absolute inset-0 flex items-center justify-center bg-gray-100 text-gray-500"
+                            style={{ display: "none" }}
+                          >
+                            <div className="text-center">
+                              <svg
+                                className="mx-auto h-12 w-12 text-gray-400"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                />
+                              </svg>
+                              <p className="mt-1 text-sm">
+                                Failed to load image
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-2 gap-4 mb-4">

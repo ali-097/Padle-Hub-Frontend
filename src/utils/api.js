@@ -55,8 +55,20 @@ export const authAPI = {
 export const courtAPI = {
   getAllCourts: () => api.get("/courts"),
   getCourtById: (id) => api.get(`/courts/${id}`),
-  createCourt: (courtData) => api.post("/courts", courtData),
-  updateCourt: (id, courtData) => api.put(`/courts/${id}`, courtData),
+  createCourt: (courtData) => {
+    const config =
+      courtData instanceof FormData
+        ? { headers: { "Content-Type": "multipart/form-data" } }
+        : {};
+    return api.post("/courts", courtData, config);
+  },
+  updateCourt: (id, courtData) => {
+    const config =
+      courtData instanceof FormData
+        ? { headers: { "Content-Type": "multipart/form-data" } }
+        : {};
+    return api.put(`/courts/${id}`, courtData, config);
+  },
   deleteCourt: (id) => api.delete(`/courts/${id}`),
   addClosedDate: (id, closedDateData) =>
     api.post(`/courts/${id}/closed-date`, closedDateData),
