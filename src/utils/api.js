@@ -74,4 +74,19 @@ export const courtAPI = {
     api.post(`/courts/${id}/closed-date`, closedDateData),
 };
 
+export const bookingAPI = {
+  createBooking: (bookingData) => api.post("/bookings", bookingData),
+  getMyBookings: (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return api.get(`/bookings/my${queryString ? `?${queryString}` : ""}`);
+  },
+  getAllBookings: (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return api.get(`/bookings${queryString ? `?${queryString}` : ""}`);
+  },
+  cancelBooking: (bookingId) => api.patch(`/bookings/${bookingId}/cancel`),
+  rescheduleBooking: (bookingId, newBookingData) =>
+    api.patch(`/bookings/${bookingId}/reschedule`, newBookingData),
+};
+
 export default api;

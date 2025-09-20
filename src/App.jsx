@@ -4,10 +4,12 @@ import { AuthProvider } from "./context/AuthContext";
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ProtectedAdminRoute from "./components/ProtectedAdminRoute";
+import ProtectedUserRoute from "./components/ProtectedUserRoute";
 import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import CourtsPage from "./pages/CourtsPage";
+import BookingsPage from "./pages/BookingsPage";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import "./App.css";
 
@@ -24,9 +26,17 @@ const App = () => {
             <Route
               path="/courts"
               element={
-                <ProtectedRoute>
+                <ProtectedUserRoute>
                   <CourtsPage />
-                </ProtectedRoute>
+                </ProtectedUserRoute>
+              }
+            />
+            <Route
+              path="/bookings"
+              element={
+                <ProtectedUserRoute>
+                  <BookingsPage />
+                </ProtectedUserRoute>
               }
             />
             <Route

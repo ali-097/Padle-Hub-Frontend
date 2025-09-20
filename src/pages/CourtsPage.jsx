@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { courtAPI } from "../utils/api";
 import { useAuth } from "../context/AuthContext";
+import BookingModal from "../components/BookingModal";
 
 const CourtsPage = () => {
   const [courts, setCourts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [filter, setFilter] = useState("all");
-  const { user } = useAuth();
+  const [selectedCourt, setSelectedCourt] = useState(null);
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const { user, isAuthenticated } = useAuth();
 
   useEffect(() => {
     fetchCourts();
@@ -87,6 +90,20 @@ const CourtsPage = () => {
     const ampm = hour >= 12 ? "PM" : "AM";
     const displayHour = hour % 12 || 12;
     return `${displayHour}:${minutes} ${ampm}`;
+  };
+
+  const handleBookCourt = (court) => {
+    if (!isAuthenticated) {
+      setError("Please log in to book a court");
+      return;
+    }
+    setSelectedCourt(court);
+    setIsBookingModalOpen(true);
+  };
+
+  const handleCloseBookingModal = () => {
+    setIsBookingModalOpen(false);
+    setSelectedCourt(null);
   };
 
   if (loading) {
@@ -255,7 +272,6 @@ const CourtsPage = () => {
                     </div>
                   )}
 
-                  {/* Status Badge */}
                   <div className="absolute top-4 right-4">
                     <span
                       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
@@ -268,14 +284,12 @@ const CourtsPage = () => {
                   </div>
                 </div>
 
-                {/* Court Details */}
                 <div className="p-6">
                   <div className="mb-4">
                     <h3 className="text-xl font-bold text-gray-900 mb-2">
                       {court.name}
                     </h3>
 
-                    {/* Operating Hours */}
                     <div className="flex items-center text-sm text-gray-600 mb-3">
                       <svg
                         className="w-4 h-4 mr-2"
@@ -338,44 +352,54 @@ const CourtsPage = () => {
                     </div>
                   )}
 
-                  {/* Action Button */}
-                  <button
-                    className={`w-full py-3 px-4 rounded-lg font-medium transition-colors duration-200 ${
-                      court.status === "available"
-                        ? "bg-blue-600 text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                        : "bg-gray-100 text-gray-400 cursor-not-allowed"
-                    }`}
-                    disabled={court.status !== "available"}
-                  >
-                    {court.status === "available" ? (
-                      <div className="flex items-center justify-center">
-                        <svg
-                          className="w-5 h-5 mr-2"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                          ></path>
-                        </svg>
-                        Book Now
-                      </div>
-                    ) : court.status === "maintenance" ? (
-                      "Under Maintenance"
-                    ) : (
-                      "Currently Closed"
-                    )}
-                  </button>
+                  {isAuthenticated && (
+                    <button
+                      onClick={() => handleBookCourt(court)}
+                      className={`w-full py-3 px-4 rounded-lg font-medium transition-colors duration-200 ${
+                        court.status === "available" && isAuthenticated
+                          ? "bg-blue-600 text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                          : court.status === "available" && !isAuthenticated
+                          ? "bg-gray-600 text-white hover:bg-gray-700 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                          : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      }`}
+                      disabled={court.status !== "available"}
+                    >
+                      {court.status === "available" ? (
+                        <div className="flex items-center justify-center">
+                          <svg
+                            className="w-5 h-5 mr-2"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2"
+                              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                            ></path>
+                          </svg>
+                          Book Now
+                        </div>
+                      ) : court.status === "maintenance" ? (
+                        "Under Maintenance"
+                      ) : (
+                        "Currently Closed"
+                      )}
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
           </div>
         )}
       </div>
+
+      <BookingModal
+        isOpen={isBookingModalOpen}
+        onClose={handleCloseBookingModal}
+        court={selectedCourt}
+      />
     </div>
   );
 };

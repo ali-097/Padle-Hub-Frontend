@@ -31,20 +31,33 @@ const Navbar = () => {
             >
               Home
             </Link>
-            {isAuthenticated && user?.role === "admin" ? (
-              <Link
-                to="/admin"
-                className="text-gray-600 hover:text-blue-600 transition-colors duration-200"
-              >
-                Admin Dashboard
-              </Link>
-            ) : (
+            {(!isAuthenticated || user?.role !== "admin") && (
               <Link
                 to="/courts"
                 className="text-gray-600 hover:text-blue-600 transition-colors duration-200"
               >
                 Courts
               </Link>
+            )}
+            {isAuthenticated && (
+              <>
+                {user?.role !== "admin" && (
+                  <Link
+                    to="/bookings"
+                    className="text-gray-600 hover:text-blue-600 transition-colors duration-200"
+                  >
+                    My Bookings
+                  </Link>
+                )}
+                {user?.role === "admin" && (
+                  <Link
+                    to="/admin"
+                    className="text-gray-600 hover:text-blue-600 transition-colors duration-200"
+                  >
+                    Admin Dashboard
+                  </Link>
+                )}
+              </>
             )}
             <Link
               to="/about"
